@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ビタキャリ タイプ診断</title>
+<style>
+  :root {
+    --bg-bordeaux-light: #FBF4F5; /* 全体の背景：淡いペールボルドー */
+    --bordeaux-main: #6A1A24;     /* ブランドのキーカラー：深みのあるボルドー */
+    --bordeaux-soft: #8B4049;     /* 補足テキスト・サブアクセント */
+    --card-bg: #FFFFFF;           /* カード背景 */
+    --box-bg: #F8ECEF;            /* 質問枠・補足枠の背景：ほんのりピンクボルドー */
+    --border-color: #58151E;      /* 引き締め用の濃い枠線色 */
+    
+    --yes: #B83B4A;               /* YESボタン：ボルドーレッド */
+    --no: #4D6475;                /* NOボタン：落ち着いたスレートブルー */
+    --btn-action: #7D1D2B;        /* ワークシート遷移ボタン */
+    
+    --c1: #F4C2C2;
+    --c2: #F8D9A0;
+    --c3: #C2E2D3;
+    --c4: #B8D5E5;
+    --c5: #D8C5E5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: var(--bg-bordeaux-light);
+    color: var(--bordeaux-main);
+    font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container {
+    background: var(--card-bg);
+    max-width: 480px;
+    width: 100%;
+    border-radius: 20px;
+    border: 3px solid var(--border-color);
+    box-shadow: 6px 6px 0px rgba(106, 26, 36, 0.15);
+    padding: 28px 24px 32px;
+    text-align: center;
+    position: relative;
+  }
+
+  /* 常時上部に表示されるブランドロゴ */
+  .brand-logo-wrap {
+    margin-bottom: 24px;
+  }
+  .brand-logo {
+    max-width: 240px;
+    width: 100%;
+    height: auto;
+    max-height: 85px;
+    object-fit: contain;
+    display: inline-block;
+  }
+
+  .badge {
+    display: inline-block;
+    background: var(--bordeaux-main);
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+  }
+  h1 { font-size: 20px; margin-bottom: 8px; line-height: 1.4; color: var(--bordeaux-main); }
+  p.desc { font-size: 13px; color: var(--bordeaux-soft); margin-bottom: 24px; line-height: 1.6; }
+  
+  /* 質問カード表示エリア */
+  .question-box {
+    background: var(--box-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px 16px;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .btn-group { display: flex; gap: 14px; }
+  .btn {
+    flex: 1;
+    padding: 16px 0;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    box-shadow: 3px 3px 0 var(--border-color);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--border-color); }
+  .btn-yes { background: var(--yes); color: #fff; }
+  .btn-no { background: var(--no); color: #fff; }
+  .btn-start { background: var(--bordeaux-main); color: #fff; width: 100%; }
+
+  /* 結果表示エリア（四角いイラスト枠） */
+  .result-avatar-wrap {
+    width: 220px;
+    height: 220px;
+    border-radius: 16px;
+    margin: 0 auto 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--border-color);
+    box-shadow: 4px 4px 0 rgba(106, 26, 36, 0.18);
+    overflow: hidden;
+    background: #fff;
+    padding: 10px;
+  }
+  .result-avatar-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+    display: block;
+  }
+  .result-title { font-size: 22px; font-weight: bold; margin-bottom: 6px; color: var(--bordeaux-main); }
+  .result-type { font-size: 13px; color: var(--bordeaux-soft); margin-bottom: 16px; font-weight: bold; }
+  .result-comment {
+    font-size: 14px;
+    text-align: left;
+    line-height: 1.7;
+    background: var(--box-bg);
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    border: 1px dashed var(--bordeaux-soft);
+  }
+  .action-btn {
+    display: block;
+    width: 100%;
+    text-decoration: none;
+    padding: 16px 0;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 15px;
+    border: 2px solid var(--border-color);
+    box-shadow: 3px 3px 0 var(--border-color);
+    margin-bottom: 12px;
+    background: var(--btn-action);
+    color: #fff;
+    transition: opacity 0.2s;
+  }
+  .action-btn:hover { opacity: 0.92; }
+  .retry-btn {
+    background: transparent;
+    border: none;
+    color: var(--bordeaux-soft);
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="app">
+  <!-- 常時最上部に表示されるロゴ -->
+  <div class="brand-logo-wrap">
+    <img src="https://lh3.googleusercontent.com/d/1K0VTpNn2ntoTrFmXgFjRevx3THOmLaMP" alt="ビタキャリ ロゴ" class="brand-logo">
+  </div>
+
+  <!-- START画面 -->
+  <div id="screen-start">
+    <span class="badge">1分でわかる現状診断</span>
+    <h1>ビタキャリ タイプ診断</h1>
+    <p class="desc">直感で「YES」か「NO」を選ぶだけで、今のあなたの状態と次の一歩が明確になります。</p>
+    <button class="btn btn-start" onclick="startQuiz()">診断をスタートする</button>
+  </div>
+
+  <!-- 質問画面 -->
+  <div id="screen-question" style="display: none;">
+    <span class="badge" id="step-badge">Question</span>
+    <div class="question-box" id="question-text"></div>
+    <div class="btn-group">
+      <button class="btn btn-yes" onclick="answer(true)">YES</button>
+      <button class="btn btn-no" onclick="answer(false)">NO</button>
+    </div>
+  </div>
+
+  <!-- 結果画面 -->
+  <div id="screen-result" style="display: none;">
+    <span class="badge">診断結果</span>
+    
+    <div class="result-avatar-wrap" id="res-circle">
+      <img id="res-img" src="" alt="タイプイラスト">
+    </div>
+    
+    <div class="result-title" id="res-name"></div>
+    <div class="result-type" id="res-type"></div>
+    <div class="result-comment" id="res-desc"></div>
+    
+    <!-- 導線リンク -->
+    <a href="#" target="_blank" class="action-btn" id="res-link">専用ワークはこちら</a>
+    <button class="retry-btn" onclick="startQuiz()">もう一度診断する</button>
+  </div>
+</div>
+
+<script>
+  const matrix = [
+    [
+      "最近、心や体のエネルギーが枯渇していると感じる（頑張りすぎ・疲れ気味）",
+      "「休んでいいのかな」と罪悪感を感じることがある",
+      "何かを決める前に、まず休みたいと思う"
+    ],
+    [
+      "「本当は何がしたいのか」自分でもよくわからない感覚がある",
+      "やりたいことを聞かれると、答えに詰まってしまう",
+      "焦りはあるけど、方向を決めきれずにいる"
+    ],
+    [
+      "ぼんやりと「こうなりたい」というイメージはある",
+      "でも、行動には移せていない（現状維持が続いている）",
+      "不安や自信のなさが、行動を止めている気がする"
+    ],
+    [
+      "すでに応募・面接・副業など、具体的な行動を起こしている",
+      "前向きなエネルギーで、今の行動を進められている",
+      "一方で、頑張りすぎて視野が狭くなっている気がする"
+    ]
+  ];
+
+  const types = [
+    {
+      name: "いきぎれちゃん",
+      type: "燃え尽き気味タイプ",
+      image: "https://lh3.googleusercontent.com/d/1rJUa2_hDqYJJCR8C5UTOzZQrYvZmIplu",
+      color: "var(--c1)",
+      desc: "全力で走り抜けてきた証拠です。今は無理に進むより、まずは罪悪感なくエネルギーを回復させることが最優先のタイミングです。",
+      url: "https://note.com/preview/n29c5ac0dbe16?prev_access_key=66ffeb1e6b2d26375b42c3d58779378f"
+    },
+    {
+      name: "まいごちゃん",
+      type: "迷走中タイプ",
+      image: "https://lh3.googleusercontent.com/d/1E4p7RogjMOXTDmLvdBCil3n1p2BlfrM4",
+      color: "var(--c2)",
+      desc: "選択肢が多すぎたり周囲の声に合わせたりして、自分の軸が見えにくくなっています。自分の「本当の感情」を棚卸ししてみましょう。",
+      url: "https://note.com/preview/n43387fada2c7?prev_access_key=20bde440b79b665ee37d8d294e083525"
+    },
+    {
+      name: "もじもじちゃん",
+      type: "停滞中タイプ",
+      image: "https://lh3.googleusercontent.com/d/1XsaDSy6hk9-Rg-XiJBMFP05HEWHi5k3n",
+      color: "var(--c3)",
+      desc: "方向性は見えているけれど、失敗への恐怖がストッパーになっています。まずはリスクのない極小の「スモールステップ」から崩していきましょう。",
+      url: "https://note.com/preview/n7c4fc9722200?prev_access_key=e4a4a68b83c41cc82969a95ce3030dd8"
+    },
+    {
+      name: "ぜんりょくしっそうちゃん",
+      type: "挑戦中タイプ",
+      image: "https://lh3.googleusercontent.com/d/1-NlusdcT0eYzPUW8DUJpn96fNdIt3Hq-",
+      color: "var(--c4)",
+      desc: "素晴らしい行動力です！ただ、猪突猛進になりすぎて本当に望む方向とズレていないか、定期的な作戦会議と軌道修正が必要です。",
+      url: "https://note.com/preview/n45344acfedd9?prev_access_key=48e7b3b5307af0891676ec97389b0000"
+    },
+    {
+      name: "スタートラインちゃん",
+      type: "助走中タイプ",
+      image: "https://lh3.googleusercontent.com/d/1SJFufiMHQ3vqGsmHIxaJzmn4aIBkmbwO",
+      color: "var(--c5)",
+      desc: "極端な偏りがなく、これから新しい挑戦をスタートできるニュートラルな状態です。まずは幅広く自己分析と情報収集を深めていきましょう。",
+      url: "https://note.com/preview/ndc30c9d742d8?prev_access_key=77dd15f1f87652ece1fa3b696f85b734"
+    }
+  ];
+
+  let currentCol = 0;
+  let currentRow = 0;
+
+  function startQuiz() {
+    currentCol = 0;
+    currentRow = 0;
+    document.getElementById("screen-start").style.display = "none";
+    document.getElementById("screen-result").style.display = "none";
+    document.getElementById("screen-question").style.display = "block";
+    showQuestion();
+  }
+
+  function showQuestion() {
+    document.getElementById("question-text").innerText = matrix[currentCol][currentRow];
+  }
+
+  function answer(isYes) {
+    if (isYes) {
+      if (currentRow === 2) {
+        showResult(currentCol);
+      } else {
+        currentRow++;
+        showQuestion();
+      }
+    } else {
+      currentCol++;
+      if (currentCol > 3) {
+        showResult(4);
+      } else {
+        showQuestion();
+      }
+    }
+  }
+
+  function showResult(index) {
+    const data = types[index];
+    document.getElementById("screen-question").style.display = "none";
+    document.getElementById("screen-result").style.display = "block";
+
+    document.getElementById("res-circle").style.backgroundColor = data.color;
+    const imgEl = document.getElementById("res-img");
+    imgEl.src = data.image;
+    imgEl.alt = data.name;
+
+    document.getElementById("res-name").innerText = data.name;
+    document.getElementById("res-type").innerText = data.type;
+    document.getElementById("res-desc").innerText = data.desc;
+    
+    const linkBtn = document.getElementById("res-link");
+    linkBtn.href = data.url;
+    linkBtn.innerText = `「${data.name}」タイプのワークはこちら`;
+  }
+</script>
+</body>
+</html>
